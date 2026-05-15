@@ -56,7 +56,7 @@ def test():
         AuroraShoppingAssistant().crew().test(
             n_iterations=int(sys.argv[1]),
             eval_llm=sys.argv[2] if len(sys.argv) > 2 else None,
-            inputs={"message": ""}
+            inputs={"message": "Qual produto voce tem disponivel?"}
         )
     except Exception as e:
         raise Exception(f"An error occurred while testing the crew: {e}")

@@ -1,4 +1,5 @@
-import requests
+import asyncio
+import aiohttp
 from crewai.tools import BaseTool
 from typing import Type, List
 from pydantic import BaseModel, Field
@@ -28,17 +29,25 @@ class CreateOrderTool(BaseTool):
     args_schema: Type[BaseModel] = CreateOrderInput
 
     def _run(self, products: List[dict]) -> dict:
-        """Create a new order with the specified products."""
+        return asyncio.run(self._arun(products))
+
+    async def _arun(self, products: List[dict]) -> dict:
+        """Create a new order with the specified products (async)."""
         try:
-            response = requests.post(
-                "http://localhost:3333/orders",
-                headers={"Content-Type": "application/json"},
-                json={"products": products},
-                timeout=30
-            )
-            if response.ok:
-                return response.json()
-            else:
-                return {"error": f"Could not create order: {response.status_code} - {response.text}"}
-        except requests.exceptions.RequestException as e:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    "http://localhost:3333/orders",
+                    headers={"Content-Type": "application/json"},
+                    json={"products": products},
+                    timeout=aiohttp.ClientTimeout(total=30)
+                ) as response:
+                    if response.ok:
+                        return await response.json()
+                    else:
+                        text = await response.text()
+                        return {"error": f"Could not create order: {response.status} - {text}"}
+        except aiohttp.ClientError as e:
             return {"error": f"Could not create order: {str(e)}"}
+
+
+create_order_tool = CreateOrderTool()

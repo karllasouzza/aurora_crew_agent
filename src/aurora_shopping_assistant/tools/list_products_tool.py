@@ -1,4 +1,5 @@
-import requests
+import asyncio
+import aiohttp
 from crewai.tools import BaseTool
 from typing import Type
 from pydantic import BaseModel
@@ -17,12 +18,23 @@ class ListProductsTool(BaseTool):
     args_schema: Type[BaseModel] = ListProductsInput
 
     def _run(self) -> dict:
-        """List all products available in the store."""
+        return asyncio.run(self._arun())
+
+    async def _arun(self) -> dict:
+        """List all products available in the store (async)."""
         try:
-            response = requests.get("http://localhost:3333/products", timeout=30)
-            if response.ok:
-                return response.json()
-            else:
-                return {"error": f"API Error {response.status_code}: {response.text}"}
-        except requests.exceptions.RequestException as e:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    "http://localhost:3333/products",
+                    timeout=aiohttp.ClientTimeout(total=30)
+                ) as response:
+                    if response.ok:
+                        return await response.json()
+                    else:
+                        text = await response.text()
+                        return {"error": f"API Error {response.status}: {text}"}
+        except aiohttp.ClientError as e:
             return {"error": f"Request failed: {str(e)}"}
+
+
+list_products_tool = ListProductsTool()
