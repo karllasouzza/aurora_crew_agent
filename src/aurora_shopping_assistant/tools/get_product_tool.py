@@ -8,7 +8,7 @@ class GetProductInput(BaseModel):
     """Input schema for GetProduct tool."""
     product_id: str = Field(
         ...,
-        description="ID of the product in UUID format. Example: 7b24131b-0f24-42ec-be99-cedd8e2fcac6"
+        description="ID of the product in UUID format."
     )
 
 
