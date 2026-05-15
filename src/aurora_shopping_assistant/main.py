@@ -2,28 +2,24 @@
 import sys
 import warnings
 
-from datetime import datetime
-
 from aurora_shopping_assistant.crew import AuroraShoppingAssistant
 
 warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
 
-# This main file is intended to be a way for you to run your
-# crew locally, so refrain from adding unnecessary logic into this file.
-# Replace with inputs you want to test with, it will automatically
-# interpolate any tasks and agents information
 
-def run():
+def run(user_message: str = ""):
     """
-    Run the crew.
+    Run the crew with a user message.
+    
+    Args:
+        user_message: The user's input message to process
     """
-    inputs = {
-        'topic': 'AI LLMs',
-        'current_year': str(datetime.now().year)
-    }
-
+    if not user_message:
+        user_message = "Liste os produtos disponíveis"
+    
     try:
-        AuroraShoppingAssistant().crew().kickoff(inputs=inputs)
+        result = AuroraShoppingAssistant().crew().kickoff(inputs={"message": user_message})
+        return result
     except Exception as e:
         raise Exception(f"An error occurred while running the crew: {e}")
 
@@ -32,15 +28,15 @@ def train():
     """
     Train the crew for a given number of iterations.
     """
-    inputs = {
-        "topic": "AI LLMs",
-        'current_year': str(datetime.now().year)
-    }
     try:
-        AuroraShoppingAssistant().crew().train(n_iterations=int(sys.argv[1]), filename=sys.argv[2], inputs=inputs)
-
+        AuroraShoppingAssistant().crew().train(
+            n_iterations=int(sys.argv[1]),
+            filename=sys.argv[2],
+            inputs={"message": ""}
+        )
     except Exception as e:
         raise Exception(f"An error occurred while training the crew: {e}")
+
 
 def replay():
     """
@@ -48,24 +44,23 @@ def replay():
     """
     try:
         AuroraShoppingAssistant().crew().replay(task_id=sys.argv[1])
-
     except Exception as e:
         raise Exception(f"An error occurred while replaying the crew: {e}")
+
 
 def test():
     """
     Test the crew execution and returns the results.
     """
-    inputs = {
-        "topic": "AI LLMs",
-        "current_year": str(datetime.now().year)
-    }
-
     try:
-        AuroraShoppingAssistant().crew().test(n_iterations=int(sys.argv[1]), eval_llm=sys.argv[2], inputs=inputs)
-
+        AuroraShoppingAssistant().crew().test(
+            n_iterations=int(sys.argv[1]),
+            eval_llm=sys.argv[2] if len(sys.argv) > 2 else None,
+            inputs={"message": ""}
+        )
     except Exception as e:
         raise Exception(f"An error occurred while testing the crew: {e}")
+
 
 def run_with_trigger():
     """
@@ -81,14 +76,10 @@ def run_with_trigger():
     except json.JSONDecodeError:
         raise Exception("Invalid JSON payload provided as argument")
 
-    inputs = {
-        "crewai_trigger_payload": trigger_payload,
-        "topic": "",
-        "current_year": ""
-    }
-
     try:
-        result = AuroraShoppingAssistant().crew().kickoff(inputs=inputs)
+        result = AuroraShoppingAssistant().crew().kickoff(
+            inputs={"trigger_payload": trigger_payload, "message": ""}
+        )
         return result
     except Exception as e:
         raise Exception(f"An error occurred while running the crew with trigger: {e}")
